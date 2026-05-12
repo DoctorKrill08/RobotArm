@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+import array
+
 
 # 1. Initialize the webcam (0 is usually the default camera)
 cap = cv2.VideoCapture(0)
@@ -56,15 +58,15 @@ while True:
     num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(vertical_edges)
 
     # Create an empty result mask
-    min_area = 50  # Set your threshold here
-    result = np.zeros_like(vertical_edges)
+    min_area = 220  # Set your threshold here
+    filtered = np.zeros_like(vertical_edges)
 
     # Start from 1 to skip the background (label 0)
+
     for i in range(1, num_labels):
         if stats[i, cv2.CC_STAT_AREA] >= min_area:
-            result[labels == i] = 255
-    cv2.imshow('Filterd vertical', result)
-
+            filtered[labels == i] = 255
+    cv2.imshow('Filterd vertical', filtered)
 
     # 5. Press 'q' on the keyboard to exit the loop
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -73,3 +75,4 @@ while True:
 # 6. Release the capture and close windows
 cap.release()
 cv2.destroyAllWindows()
+
