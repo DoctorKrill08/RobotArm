@@ -22,51 +22,48 @@ while True:
 
     #Step 1. Gray Scale and make canny edge detector   + blur  
     grayscale_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    grayscale_image =cv2.blur(grayscale_image,(5,5))
+    grayscale_image =cv2.GaussianBlur(grayscale_image,(7,7),0)
 
-    t_lower = 20
-    t_upper = 50
-
-    cv2.imshow('Webcam Feed', image)
-    cv2.imshow('Grayscale', grayscale_image)
-
-    #Draw lines of best fit with lines of set size
-
-    sobel_x = cv2.Sobel(grayscale_image, cv2.CV_64F, 1, 0, ksize=3)
-
-    # 2. Convert back to absolute 8-bit for visualization
-    abs_sobel_x = np.absolute(sobel_x)
-    sobel_8bit = np.uint8(abs_sobel_x)
+    kernel = np.ones((7, 7), np.uint8)
+    t_lower = 5
+    t_upper = 20
 
     # 3. Apply thresholding to mimic Canny's final selection step
     # This filters out weak "differences"
-    _, vertical_edges = cv2.threshold(sobel_8bit, t_lower, t_upper, cv2.THRESH_BINARY)
+    edges = cv2.Canny(grayscale_image, t_lower, t_upper,5)
+    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
 
-    cv2.imshow('Vertical Edges Only', vertical_edges)
-
-    kernel = np.ones((5, 5), np.uint8)
+    cv2.imshow('Edges Only', edges)
 
     # Thicken white pixels
-    thickened = cv2.dilate(vertical_edges, kernel, iterations=1)
-    cv2.imshow('Thick vertical edges', thickened)
+    thickened = cv2.dilate(edges, kernel, iterations=1)
+    cv2.imshow('Thick edges', thickened)
 
-    #Filter out small blobs
-    thickened = cv2.imread('blobs.jpg', 0)
+    #Inverse thickend for contours
+    thickened = cv2.bitwise_not(thickened)
 
 
-    # Find components and their stats
-    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(vertical_edges)
+    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(thickened)
 
-    # Create an empty result mask
-    min_area = 220  # Set your threshold here
-    filtered = np.zeros_like(vertical_edges)
+    ret, thresh = cv2.threshold(thickened, 100, 255, 0)
+    contours, hierarchy = cv2.findContours(thickened, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    drawing = np.zeros((thickened.shape[0], thickened.shape[1], 3), dtype=np.uint8)
 
-    # Start from 1 to skip the background (label 0)
+    for i in range(1,len(contours)):
+        cnt = contours[i]
+        M = cv2.moments(cnt)
+        area = M['m00']
+        if (area  > 300):
+            x,y,w,h = cv2.boundingRect(cnt)
+            cv2.rectangle(drawing,(x,y),(x+w,y+h),(0,0,255),2)
+            cv2.drawContours(drawing, contours, i, (0,255,0), 3)
+       
 
-    for i in range(1, num_labels):
-        if stats[i, cv2.CC_STAT_AREA] >= min_area:
-            filtered[labels == i] = 255
-    cv2.imshow('Filterd vertical', filtered)
+
+
+    cv2.imshow('Webcam Feed', image)
+    cv2.imshow('Grayscale', grayscale_image)
+    cv2.imshow('Drawing',drawing)
 
     # 5. Press 'q' on the keyboard to exit the loop
     if cv2.waitKey(1) & 0xFF == ord('q'):
