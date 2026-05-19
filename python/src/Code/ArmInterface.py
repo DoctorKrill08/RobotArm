@@ -14,16 +14,24 @@ class Interface:
         self.root.geometry("600x600")
         self.root.configure(bg='black')
         self.claw_gui = ClawGUI(tk,self.root,Robot.claw)
-        self.claw_gui.place(0,0)
+        self.claw_gui.place(10,0)
         self.elbow_gui = ArmGUI(tk,self.root,Robot.elbow)
-        self.elbow_gui.place(0,200)
+        self.elbow_gui.place(10,200)
+        self.shoulder_gui = ArmGUI(tk,self.root,Robot.shoulder)
+        self.shoulder_gui.place(210,50)
         self.turret_gui = ArmGUI(tk,self.root,Robot.turret)
-        self.turret_gui.place(0,400)
+        self.turret_gui.place(10,400)
+        self.on_off_gui = EndGUI(tk,self.root)
+        self.on_off_gui.place(210,0)
+        self.wrist_gui = ArmGUI(tk,self.root,Robot.wrist)
+        self.wrist_gui.place(210,250)
 
     def update(self):
         self.claw_gui.update(Robot.claw)
         self.elbow_gui.update(Robot.elbow)
         self.turret_gui.update(Robot.turret)
+        self.shoulder_gui.update(Robot.shoulder)
+        self.wrist_gui.update(Robot.wrist)
         self.root.update()
 
 
@@ -54,6 +62,13 @@ class SystemGUI:
     def setTelemetry(self, string):
         self.telemtryText.config(text=string)
         
+class EndGUI(SystemGUI):
+    def __init__(self,tk,root):
+        super().__init__(tk, root,"End")
+        self.frame.place(width=200,height=50)
+        self.end_button = tk.Button(self.frame, text="End Robot", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
+        self.end_button.config(command=lambda: Robot.flip())
+        self.end_button.pack(fill = 'x')
 class SubsystemGUI(SystemGUI):
     def __init__(self,tk,root,subsystem):
         super().__init__(tk, root,subsystem.name)
