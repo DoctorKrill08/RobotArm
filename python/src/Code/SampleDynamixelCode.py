@@ -8,7 +8,7 @@ from dynamixel_sdk import *
 #portHandler.openPort()
 #portHandler.setBaudRate(57600) #Rate of updating, I am not sure what units of measurement this is
 
-portHandler = PortHandler("/dev/ttyUSB0")
+portHandler = PortHandler("COM3")
 packetHandler = PacketHandler(2.0)
 
 if portHandler.openPort():
@@ -23,7 +23,7 @@ else:
   print("Failed to change the baudrate!")
   exit()
 
-dxl_id = 1
+dxl_id = 14
 torque_on_address = 64
 data = 1
 dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, dxl_id, torque_on_address, data)

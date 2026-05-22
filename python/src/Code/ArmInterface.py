@@ -14,17 +14,17 @@ class Interface:
         self.root.geometry("600x600")
         self.root.configure(bg='black')
         self.claw_gui = ClawGUI(tk,self.root,Robot.claw)
-        self.claw_gui.place(10,0)
+        self.claw_gui.place(0,0)
         self.elbow_gui = ArmGUI(tk,self.root,Robot.elbow)
-        self.elbow_gui.place(10,200)
+        self.elbow_gui.place(0,200)
         self.shoulder_gui = ArmGUI(tk,self.root,Robot.shoulder)
-        self.shoulder_gui.place(210,50)
+        self.shoulder_gui.place(400,0)
         self.turret_gui = ArmGUI(tk,self.root,Robot.turret)
-        self.turret_gui.place(10,400)
-        self.on_off_gui = EndGUI(tk,self.root)
-        self.on_off_gui.place(210,0)
+        self.turret_gui.place(0,400)
+        self.robot_gui = RobotGUI(tk,self.root)
+        self.robot_gui.place(200,0)
         self.wrist_gui = ArmGUI(tk,self.root,Robot.wrist)
-        self.wrist_gui.place(210,250)
+        self.wrist_gui.place(200,400)
 
     def update(self):
         self.claw_gui.update(Robot.claw)
@@ -32,11 +32,14 @@ class Interface:
         self.turret_gui.update(Robot.turret)
         self.shoulder_gui.update(Robot.shoulder)
         self.wrist_gui.update(Robot.wrist)
+        self.robot_gui.update(tk)
         self.root.update()
 
 
 class SystemGUI:
     TELEMETRY_TEXT_COLOR = "#00FF00"
+    INCREMENT_COLOR = "#00FF00"
+    DECREMENT_COLOR = "#FF0000"
     FRAME_COLOR = "#1C1E1C"
     TEXT_COLOR = "#FFFFFF"
     TELEMETRY_BACKGROUND_COLOR = "#141414"
@@ -59,16 +62,47 @@ class SystemGUI:
         self.telemtryText.pack(side="top", anchor="nw")
     def place(self,X,Y):
         self.frame.place(x=X,y=Y)
+    def size(self,w,h):
+        self.telemetryFrame.place(width=w, height=h, rely=0.5)
     def setTelemetry(self, string):
         self.telemtryText.config(text=string)
         
-class EndGUI(SystemGUI):
+class RobotGUI(SystemGUI):
     def __init__(self,tk,root):
-        super().__init__(tk, root,"End")
-        self.frame.place(width=200,height=50)
-        self.end_button = tk.Button(self.frame, text="End Robot", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
-        self.end_button.config(command=lambda: Robot.flip())
+        super().__init__(tk, root,"Robot")
+        self.frame.place(width=200,height=400)
+        self.end_button = tk.Button(self.frame, text="Turn Off Robot", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
+        self.end_button.config(command=lambda: Robot.turn_off())
         self.end_button.pack(fill = 'x')
+
+        self.kinematics_button = tk.Button(self.frame, text="Inverse Kinematics Off", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
+        self.kinematics_button.config(command=lambda: Robot.flip())
+        self.kinematics_button.pack(fill = 'x')
+
+        self.x_up_button = tk.Button(self.frame, text="X Up", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.INCREMENT_COLOR)
+        self.x_up_button.config(command=lambda: Robot.x_up())
+        self.x_up_button.pack(fill = 'x')
+
+        self.x_down_button = tk.Button(self.frame, text="X Down", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.DECREMENT_COLOR)
+        self.x_down_button.config(command=lambda: Robot.x_down())
+        self.x_down_button.pack(fill = 'x')
+
+        self.y_up_button = tk.Button(self.frame, text="Y Up", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.INCREMENT_COLOR)
+        self.y_up_button.config(command=lambda: Robot.y_up())
+        self.y_up_button.pack(fill = 'x')
+
+        self.y_down_button = tk.Button(self.frame, text="Y Down", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.DECREMENT_COLOR)
+        self.y_down_button.config(command=lambda: Robot.y_down())
+        self.y_down_button.pack(fill = 'x')
+
+        self.create_telemetry()
+        self.size(200,200)
+        
+
+    def update(self,tk):
+        self.setTelemetry(Robot.telemetry)
+        self.kinematics_button.config(text=f"Inverse Kinematics On: {Robot.inverse_kinematics}")
+
 class SubsystemGUI(SystemGUI):
     def __init__(self,tk,root,subsystem):
         super().__init__(tk, root,subsystem.name)
