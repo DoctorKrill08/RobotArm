@@ -14,4 +14,4 @@ xbox_controller = XboxController()
 while Robot.on:
     interface.update()
     robot.update()
-    Robot.control(xbox_controller.LeftJoystickX,xbox_controller.LeftJoystickY,xbox_controller.RightJoystickX,xbox_controller.RightBumper)
+    Robot.control(xbox_controller.RightJoystickY,xbox_controller.LeftJoystickY,xbox_controller.RightJoystickX,xbox_controller.RightBumper)
