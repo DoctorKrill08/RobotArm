@@ -25,8 +25,12 @@ class Interface:
         self.robot_gui.place(200,0)
         self.wrist_gui = ArmGUI(tk,self.root,Robot.wrist)
         self.wrist_gui.place(200,400)
-
+    update_index = 0
     def update(self):
+        if (not self.update_index == 2):
+            self.update_index += 1
+            return
+        self.update_index = 0
         self.claw_gui.update(Robot.claw)
         self.elbow_gui.update(Robot.elbow)
         self.turret_gui.update(Robot.turret)

@@ -1,6 +1,12 @@
 from enum import Enum
 from dynamixel_sdk import *
 import math
+class Modes(Enum):
+    VELOCITY = "VELOCITY",
+    POSITION = "POSITION" 
+    CURRENT = "CURRENT"
+    CURRENT_BASED_POSITION = "CURRENT_BASED_POSITION"
+
 class Motor():
     all_motors = []
     portHandler = PortHandler("COM3")
@@ -8,7 +14,7 @@ class Motor():
     packetHandler = PacketHandler(2.0)
     groupBulkWrite = GroupBulkWrite(portHandler, packetHandler)
     groupBulkRead = GroupBulkRead(portHandler, packetHandler)
-    portHandler.setBaudRate(57600)
+    portHandler.setBaudRate(1000000)
 
 
     torque_on_address = 64
@@ -94,23 +100,18 @@ class Motor():
             data = 1
         Motor.packetHandler.write1ByteTxRx(Motor.portHandler, self.dxl_id, Motor.TORQUE_ADDRESS, data)
     def update(self):
-        self.position, self.comm_result, self.error = Motor.packetHandler.read4ByteTxRx(Motor.portHandler, self.dxl_id, Motor.POSITION_ADDRESS)
-        self.angle = self.position * 0.088
-        self.velocity,_, _ = Motor.packetHandler.read4ByteTxRx(Motor.portHandler, self.dxl_id, Motor.VELOCITY_ADDRESS)
-        self.amperage,_,_ = Motor.packetHandler.read2ByteTxRx(Motor.portHandler, self.dxl_id, Motor.AMPERAGE_ADDRESS)
-        self.voltage,_,_ = Motor.packetHandler.read2ByteTxRx(Motor.portHandler, self.dxl_id, Motor.VOLTAGE_ADDRESS)
+        if (self.mode == Modes.POSITION or self.mode == Modes.CURRENT_BASED_POSITION):
+            self.position, self.comm_result, self.error = Motor.packetHandler.read4ByteTxRx(Motor.portHandler, self.dxl_id, Motor.POSITION_ADDRESS)
+            self.angle = self.position * 0.088
+        elif (self.mode == Modes.VELOCITY):
+            self.velocity,_, _ = Motor.packetHandler.read4ByteTxRx(Motor.portHandler, self.dxl_id, Motor.VELOCITY_ADDRESS)
     def status(self):
         return f"Mode: {self.mode.value}\nPosition: {self.position}\nAmperage: {self.amperage}\nVelocity: {self.velocity}\nTarget {self.mode.value}: {self.target}\nAngle: {self.angle}"
     @staticmethod
     def empty_status_with_target(mode,target):
         return f"Mode: {mode.value} Present: N/A\nAmperage: N/A\nTarget: {round(target, 4)}"
 
-    
-class Modes(Enum):
-    VELOCITY = "VELOCITY",
-    POSITION = "POSITION" 
-    CURRENT = "CURRENT"
-    CURRENT_BASED_POSITION = "CURRENT_BASED_POSITION"
+
 class Subsystem():
     def __init__(self):
         self.state = "N/A"
@@ -204,7 +205,7 @@ class Elbow(Arm):
        self.min = 400
        self.angle = 0
     def set_angle(self,angle):
-        if abs(angle - self.angle) < 1:
+        if abs(angle - self.angle) < 0.3:
             return
         self.angle = angle
         self.set_target((angle + 180) / Motor.POS_TO_ANGLE)
@@ -265,6 +266,11 @@ class Turret(Subsystem):
         self.motor0 = Motor(10,self.mode)
         self.motor0.set_mode(self.mode)
     def set_target(self,target):
+        if (abs(target) < 2):
+            if (self.motor0.velocity == 0):
+                return
+            else:
+                target = 0
         self.target = target
         self.motor0.set_velocity(target)
     def flip(self):

@@ -23,7 +23,9 @@ class Robot:
 
     goal_increment = 1
 
-    joystick_sensitivity = 1
+    joystick_sensitivity = 0.5
+
+    turret_sensitivity = 100
 
     prev_rb = False
 
@@ -94,7 +96,7 @@ class Robot:
         if (not Robot.inverse_kinematics):
             return
         Robot.set_goal(Robot.goal_x + (ly * Robot.joystick_sensitivity),Robot.goal_y + (ry * Robot.joystick_sensitivity))
-        Robot.turret.set_target(rx * -30)
+        Robot.turret.set_target((rx ** 3) * -Robot.turret_sensitivity)
     def __init__(self):
         Motor.all_motors.clear()
         Robot.claw = Claw()
@@ -102,19 +104,22 @@ class Robot:
         Robot.turret = Turret()
         Robot.shoulder = Shoulder()
         Robot.wrist = Wrist()
+    read_update_index = 0
     def update(self):
         if (not Robot.on):
             Robot.end()
             return
-        Robot.claw.update()
-        Robot.elbow.update()
-        Robot.turret.update()
-        Robot.shoulder.update()
-        Robot.wrist.update()
+        self.read_update_index += 1
+        if (self.read_update_index == 3):
+            Robot.claw.update()
+            Robot.elbow.update()
+            Robot.turret.update()
+            Robot.shoulder.update()
+            Robot.wrist.update()
+            self.read_update_index = 0
+
         Robot.calculateKinematics()
         
-        #Unfortunately inverse kinematics gives 2 angles so more work yay!!!
-
         q2a = Robot.calculate_elbow()
         q2b = - q2a
 
@@ -134,9 +139,6 @@ class Robot:
         else:
             Robot.shoulder.set_angle(Robot.shoulder_angle)
             Robot.elbow.set_angle(Robot.elbow_angle)
-            pass
-        
-
         Robot.telemetry = Robot.status()
     def flip():
         Robot.inverse_kinematics = not Robot.inverse_kinematics
