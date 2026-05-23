@@ -23,12 +23,9 @@ class Robot:
 
     goal_increment = 1
 
-    joystick_sensitivity = 0.5
+    joystick_sensitivity = 0.4
 
     turret_sensitivity = 100
-
-    prev_rb = False
-    prev_lb = False
 
     def status():
         return f"x: {Robot.x}\ny: {Robot.y}\ngoal x: {Robot.goal_x}\ngoal y: {Robot.goal_y}\nshoulder angle: {Robot.shoulder_angle}\nelbow angle: {Robot.elbow_angle}"
@@ -88,21 +85,17 @@ class Robot:
     def y_down():
         Robot.set_goal(Robot.goal_x, Robot.goal_y - Robot.goal_increment)
     
-    def control(ry,ly,rx,rb,lb):
-        if (not rb):
-            Robot.prev_rb = False
-        if (rb and not Robot.prev_rb):
+    def control(right_stick_y,left_stick_y,right_stick_x,rb_was_pressed,lb_was_pressed):
+        if (rb_was_pressed):
             Robot.prev_rb = True
             Robot.claw.flip_claw_state()
-        if (not lb):
-            Robot.prev_lb = False
-        if (lb and not Robot.prev_lb):
+        if (lb_was_pressed):
             Robot.prev_lb = True
             Robot.wrist.rotate()
         if (not Robot.inverse_kinematics):
             return
-        Robot.set_goal(Robot.goal_x + (ly * Robot.joystick_sensitivity),Robot.goal_y + (ry * Robot.joystick_sensitivity))
-        Robot.turret.set_target((rx ** 3) * -Robot.turret_sensitivity)
+        Robot.set_goal(Robot.goal_x + (left_stick_y * Robot.joystick_sensitivity),Robot.goal_y + (right_stick_y * Robot.joystick_sensitivity))
+        Robot.turret.set_target((right_stick_x ** 3) * -Robot.turret_sensitivity)
     def __init__(self):
         Motor.all_motors.clear()
         Robot.claw = Claw()
@@ -111,19 +104,17 @@ class Robot:
         Robot.shoulder = Shoulder()
         Robot.wrist = Wrist()
     read_update_index = 0
+    def update_subsystems():
+        Robot.claw.update()
+        Robot.elbow.update()
+        Robot.turret.update()
+        Robot.shoulder.update()
+        Robot.wrist.update()
     def update(self):
         if (not Robot.on):
             Robot.end()
             return
-        self.read_update_index += 1
-        if (self.read_update_index == 3):
-            Robot.claw.update()
-            Robot.elbow.update()
-            Robot.turret.update()
-            Robot.shoulder.update()
-            Robot.wrist.update()
-            self.read_update_index = 0
-
+        
         Robot.calculateKinematics()
         
         q2a = Robot.calculate_elbow()

@@ -29,18 +29,35 @@ class XboxController(object):
         self.UpDPad = 0
         self.DownDPad = 0
 
+        self.prevLeftTrigger = 0
+        self.prevRightTrigger = 0
+        self.prevLeftBumper = 0
+        self.prevRightBumper = 0
+        self.prevA = 0
+        self.prevX = 0
+        self.prevY = 0
+        self.prevB = 0
+        self.prevBack = 0
+        self.prevStart = 0
+        self.prevLeftDPad = 0
+        self.prevRightDPad = 0
+        self.prevUpDPad = 0
+        self.prevDownDPad = 0
+
         self._monitor_thread = threading.Thread(target=self._monitor_controller, args=())
         self._monitor_thread.daemon = True
         self._monitor_thread.start()
 
-
-    def read(self): # return the buttons/triggers that you care about in this methode
-        x = self.LeftJoystickX
-        y = self.LeftJoystickY
-        a = self.A
-        b = self.X # b=1, x=2
-        rb = self.RightBumper
-        return [x, y, a, b, rb]
+    def rb_was_pressed(self):
+        result = self.RightBumper and not self.prevRightBumper
+        if (result):
+            self.prevRightBumper = self.RightBumper
+        return result
+    def lb_was_pressed(self):
+        result = self.LeftBumper and not self.prevLeftBumper
+        if (result):
+            self.prevLeftBumper = self.LeftBumper
+        return result
 
 
     def _monitor_controller(self):
@@ -56,34 +73,48 @@ class XboxController(object):
                 elif event.code == 'ABS_RX':
                     self.RightJoystickX = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
                 elif event.code == 'ABS_Z':
+                    self.prevLeftTrigger = self.LeftTrigger
                     self.LeftTrigger = event.state / XboxController.MAX_TRIG_VAL # normalize between 0 and 1
                 elif event.code == 'ABS_RZ':
+                    self.prevRightTrigger = self.RightTrigger
                     self.RightTrigger = event.state / XboxController.MAX_TRIG_VAL # normalize between 0 and 1
                 elif event.code == 'BTN_TL':
+                    self.prevLeftBumper = self.LeftBumper
                     self.LeftBumper = event.state
                 elif event.code == 'BTN_TR':
+                    self.prevRightBumper = self.RightBumper
                     self.RightBumper = event.state
                 elif event.code == 'BTN_SOUTH':
+                    self.prevA = self.A
                     self.A = event.state
                 elif event.code == 'BTN_NORTH':
+                    self.prevY = self.Y
                     self.Y = event.state #previously switched with X
                 elif event.code == 'BTN_WEST':
+                    self.prevX = self.X
                     self.X = event.state #previously switched with Y
                 elif event.code == 'BTN_EAST':
+                    self.prevB = self.B
                     self.B = event.state
                 elif event.code == 'BTN_THUMBL':
                     self.LeftThumb = event.state
                 elif event.code == 'BTN_THUMBR':
                     self.RightThumb = event.state
                 elif event.code == 'BTN_SELECT':
+                    self.prevBack = self.Back
                     self.Back = event.state
                 elif event.code == 'BTN_START':
+                    self.prevStart = self.Start
                     self.Start = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY1':
+                    self.prevLeftDPad = self.LeftDPad
                     self.LeftDPad = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY2':
+                    self.prevRightBumper = self.RightDPad
                     self.RightDPad = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY3':
+                    self.prevUpDPad = self.UpDPad
                     self.UpDPad = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY4':
+                    self.prevDownDPad = self.DownDPad
                     self.DownDPad = event.state
