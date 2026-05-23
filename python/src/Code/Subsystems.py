@@ -243,6 +243,8 @@ class Shoulder(Arm):
         
 
 class Wrist(Arm):
+    STRAIGHT_POS = 2500
+    SIDE_POS = 1450
     def __init__(self):
        super().__init__()
        self.name = "WRIST"
@@ -253,6 +255,11 @@ class Wrist(Arm):
        self.target = self.motor0.position
        self.max = 2572
        self.min = 431
+    def rotate(self):
+        if (self.target == self.STRAIGHT_POS):
+            self.set_target(self.SIDE_POS)
+        else:
+            self.set_target(self.STRAIGHT_POS)
     def update(self):
         self.telemetry = self.motor0.status()
         self.motor0.update()

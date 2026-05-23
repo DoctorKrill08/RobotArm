@@ -28,6 +28,7 @@ class Robot:
     turret_sensitivity = 100
 
     prev_rb = False
+    prev_lb = False
 
     def status():
         return f"x: {Robot.x}\ny: {Robot.y}\ngoal x: {Robot.goal_x}\ngoal y: {Robot.goal_y}\nshoulder angle: {Robot.shoulder_angle}\nelbow angle: {Robot.elbow_angle}"
@@ -87,12 +88,17 @@ class Robot:
     def y_down():
         Robot.set_goal(Robot.goal_x, Robot.goal_y - Robot.goal_increment)
     
-    def control(ry,ly,rx,rb):
+    def control(ry,ly,rx,rb,lb):
         if (not rb):
             Robot.prev_rb = False
         if (rb and not Robot.prev_rb):
             Robot.prev_rb = True
             Robot.claw.flip_claw_state()
+        if (not lb):
+            Robot.prev_lb = False
+        if (lb and not Robot.prev_lb):
+            Robot.prev_lb = True
+            Robot.wrist.rotate()
         if (not Robot.inverse_kinematics):
             return
         Robot.set_goal(Robot.goal_x + (ly * Robot.joystick_sensitivity),Robot.goal_y + (ry * Robot.joystick_sensitivity))

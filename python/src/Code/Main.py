@@ -19,7 +19,8 @@ while Robot.on:
         xbox_controller.RightJoystickY,
         xbox_controller.LeftJoystickY,
         xbox_controller.RightJoystickX,
-        xbox_controller.RightBumper
+        xbox_controller.RightBumper,
+        xbox_controller.LeftBumper
     )
 
     elapsed = time.perf_counter() - start
