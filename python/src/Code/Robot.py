@@ -32,10 +32,10 @@ class Robot:
     autonomous = False
 
     SCOUTING_X = 3
-    SCOUTING_Y = 5
+    SCOUTING_Y = 5.5
 
     REACH_X = 18
-    REACH_Y = 2.5
+    REACH_Y = 2
 
 
     x = 0
@@ -57,12 +57,13 @@ class Robot:
 
     TURRET_SENSITIVITY = 100
 
-    READ_RATE = 20
+    READ_RATE = 60
 
-    CAMERA_WITHIN_ERROR = 5
-    SCOUT_TIME = 4
-    REACH_TIME = 4
-    GRAB_TIME = 2
+    CAMERA_WITHIN_ERROR = 3
+    SCOUT_LOAD_TIME = 2
+    SCOUTING_TIME = 6
+    REACH_TIME = 3
+    GRAB_TIME = 1
 
     camera_error = 0
 
@@ -99,10 +100,7 @@ class Robot:
         if abs(x) < Robot.BASE_X:
             if (y < Robot.BASE_Y):
                 y = Robot.BASE_Y
-        if (abs(x - Robot.goal_x) < 0.1):
-            return
-        if (abs(y - Robot.goal_y) < 0.1):
-            return
+    
 
         r = math.hypot(x,y)
 
@@ -170,14 +168,19 @@ class Robot:
         Robot.wrist.set_target(Wrist.STRAIGHT_POS)
         if (Robot.auto_state == AutoState.RESTING):
             Robot.set_goal(Robot.SCOUTING_X,Robot.SCOUTING_Y)
+            if (Robot.auto_state_timer.time_passed_seconds() > Robot.GRAB_TIME):
+                Robot.autonomous = False
+                Camera.destroy_windows()
             return
         if (Robot.auto_state == AutoState.SCOUTING):
             Camera.update()
             Robot.claw.set_state(ClawStates.OPEN)
             Robot.set_goal(Robot.SCOUTING_X,Robot.SCOUTING_Y)
             Robot.camera_error = 0
-            if (Robot.auto_state_timer.time_passed_seconds() < Robot.SCOUT_TIME):
+            if (Robot.auto_state_timer.time_passed_seconds() < Robot.SCOUT_LOAD_TIME):
                 return
+            if (Robot.auto_state_timer.time_passed_seconds() - Robot.SCOUT_LOAD_TIME > Robot.SCOUTING_TIME):
+                Robot.set_auto_state(AutoState.RESTING)
             if Camera.visible:
                 error = Camera.CENTER_X - Camera.target_x
                 if (Robot.camera_error == error):
@@ -185,10 +188,12 @@ class Robot:
                 Robot.camera_error = error
                 if (abs(Robot.camera_error) < Robot.CAMERA_WITHIN_ERROR):
                     Robot.set_auto_state(AutoState.REACHING)
-                    Camera.end()
-            Robot.rotate_to(Robot.camera_error)
+                Robot.rotate_to(Robot.camera_error)
+            else:
+                Robot.turret.set_target(0)
             return
         if (Robot.auto_state == AutoState.REACHING):
+            Robot.turret.set_target(0)
             Robot.set_goal(lerp(Robot.SCOUTING_X,Robot.REACH_X,Robot.auto_state_timer.time_passed_seconds(),Robot.REACH_TIME),
                            lerp(Robot.SCOUTING_Y,Robot.REACH_Y,Robot.auto_state_timer.time_passed_seconds(),Robot.REACH_TIME))
             if (Robot.auto_state_timer.time_passed_seconds() > Robot.REACH_TIME):
@@ -198,7 +203,6 @@ class Robot:
             Robot.claw.set_state(ClawStates.CLOSE)
             if (Robot.auto_state_timer.time_passed_seconds() > Robot.GRAB_TIME):
                 Robot.set_auto_state(AutoState.RESTING)
-                Robot.autonomous = False
             return
 
     def rotate_to(error):
@@ -206,14 +210,14 @@ class Robot:
         Robot.turret.set_target(error * P)
 
     read_index = 0
-    def update(self):
+    def  update(self):
         if (Robot.autonomous):
             Robot.auto_update()
         if (not Robot.on):
             Robot.end()
             return
         Robot.read_index += 1
-        if (Robot.read_index == Robot.READ_RATE):
+        if (Robot.read_index >= Robot.READ_RATE and not Robot.autonomous):
             Robot.read_index = 0
             Robot.read_subsystems()
         
@@ -246,16 +250,24 @@ class Robot:
     def flip_autonomous():
         Robot.autonomous = not Robot.autonomous
         if (Robot.autonomous):
-            Camera.start()
+            if (not Camera.Ready):
+                Camera.start()
             Robot.set_auto_state(AutoState.SCOUTING)
             Robot.inverse_kinematics = True
         else:
-            Camera.end()
+            Robot.camera_stop()
             Robot.set_auto_state(AutoState.RESTING)
     
     def turn_off():
         Robot.on = False
-    
+    def flip_camera():
+        if Camera.Ready:
+            Camera.end()
+        else:
+            Camera.start()
+    def camera_stop():
+        Camera.destroy_windows()
+
     def end():
         Motor.data = 0
         for id in Motor.all_motors:

@@ -56,6 +56,8 @@ class Camera():
         contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         drawing = np.zeros((binary_image.shape[0], binary_image.shape[1], 3), dtype=np.uint8)
         Camera.visible = False
+        Camera.target_x = Camera.CENTER_X
+        Camera.target_y = Camera.CENTER_Y
         for i in range(0,len(contours)):
             cnt = contours[i]
             M = cv2.moments(cnt)
@@ -120,7 +122,10 @@ class Camera():
             Camera.Ready = True
 
     def end():
+        Camera.Ready = False
         Camera.cap.release()
+        Camera.destroy_windows()
+    def destroy_windows():
         cv2.destroyAllWindows()
 """
 Camera.start()

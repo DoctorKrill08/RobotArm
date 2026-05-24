@@ -1,6 +1,7 @@
 import tkinter as tk
 from enum import Enum
 from Robot import Robot
+from BlobCountor import Camera
 #Buttons:
 #Open/Close Claw
 #Up/Down Forearm
@@ -83,6 +84,10 @@ class RobotGUI(SystemGUI):
         self.kinematics_button.config(command=lambda: Robot.flip_kinematics())
         self.kinematics_button.pack(fill = 'x')
 
+        self.camera_button = tk.Button(self.frame, text="Camera Off", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
+        self.camera_button.config(command=lambda: Robot.flip_camera())
+        self.camera_button.pack(fill = 'x')
+
         self.autonomous_button = tk.Button(self.frame, text="Autonomous Off", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
         self.autonomous_button.config(command=lambda: Robot.flip_autonomous())
         self.autonomous_button.pack(fill = 'x')
@@ -111,6 +116,7 @@ class RobotGUI(SystemGUI):
         self.setTelemetry(Robot.telemetry)
         self.kinematics_button.config(text=f"Inverse Kinematics On: {Robot.inverse_kinematics}")
         self.autonomous_button.config(text=f"Autonomous On: {Robot.autonomous}")
+        self.camera_button.config(text=f"Camera On: {Camera.Ready}")
 
 
 class SubsystemGUI(SystemGUI):

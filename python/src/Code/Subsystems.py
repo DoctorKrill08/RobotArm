@@ -148,7 +148,7 @@ class Claw(Subsystem):
     #Open = min
     #Closed = max
     OPEN_AMP = 200
-    CLOSE_AMP = 30
+    CLOSE_AMP = 80
 
     def __init__(self):
         super().__init__()
