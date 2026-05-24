@@ -1,5 +1,11 @@
 from Subsystems import *
 import atexit
+import BlobCountor as Camera
+
+class AutoState(Enum):
+    SCOUTING = "SCOUTING"
+    REACHING = "REACHING"
+    GRAB = "GRAB"
 class Robot:
     claw = None
     elbow = None
@@ -9,23 +15,37 @@ class Robot:
     on = True
     telemetry = ""
 
+    auto_state = AutoState.SCOUTING
+
     inverse_kinematics = False
+    autonomous = False
+
+    SCOUTING_X = 5
+    SCOUTING_Y = 5
+
+
     x = 0
     y = 0
     goal_x = 0
     goal_y = 0
     heading = 0
 
-    min_y = -2.2
+    FLOOR_Y = 0.5
+    BASE_X = 5.5
+    BASE_Y = 5
 
     shoulder_angle = 0
     elbow_angle = 0
 
     goal_increment = 1
 
-    joystick_sensitivity = 0.4
+    JOYSTICK_SENSITIVITY = 0.4
 
-    turret_sensitivity = 100
+    TURRET_SENSITIVITY = 100
+
+    READ_RATE = 20
+
+
 
     def status():
         return f"x: {Robot.x}\ny: {Robot.y}\ngoal x: {Robot.goal_x}\ngoal y: {Robot.goal_y}\nshoulder angle: {Robot.shoulder_angle}\nelbow angle: {Robot.elbow_angle}"
@@ -49,8 +69,11 @@ class Robot:
         q1 = math.atan2(Robot.goal_y , Robot.goal_x) - math.atan2((Elbow.length * math.sin(q2)),(Shoulder.length + (Elbow.length * math.cos(q2))))
         return q1
     def set_goal(x,y):
-        if y < Robot.min_y:
-            y = Robot.min_y
+        if y < Robot.FLOOR_Y:
+            y = Robot.FLOOR_Y
+        if abs(x) < Robot.BASE_X:
+            if (y < Robot.BASE_Y):
+                y = Robot.BASE_Y
 
         r = math.hypot(x,y)
 
@@ -94,8 +117,8 @@ class Robot:
             Robot.wrist.rotate()
         if (not Robot.inverse_kinematics):
             return
-        Robot.set_goal(Robot.goal_x + (left_stick_y * Robot.joystick_sensitivity),Robot.goal_y + (right_stick_y * Robot.joystick_sensitivity))
-        Robot.turret.set_target((right_stick_x ** 3) * -Robot.turret_sensitivity)
+        Robot.set_goal(Robot.goal_x + (left_stick_y * Robot.JOYSTICK_SENSITIVITY),Robot.goal_y + (right_stick_y * Robot.JOYSTICK_SENSITIVITY))
+        Robot.turret.set_target((right_stick_x ** 3) * -Robot.TURRET_SENSITIVITY)
     def __init__(self):
         Motor.all_motors.clear()
         Robot.claw = Claw()
@@ -110,10 +133,21 @@ class Robot:
         Robot.turret.update()
         Robot.shoulder.update()
         Robot.wrist.update()
+
+    def rotate_to(error):
+        P = 0.1
+        Robot.turret.set_target(error * P)
+
+    
+    read_index = 0
     def update(self):
         if (not Robot.on):
             Robot.end()
             return
+        Robot.read_index += 1
+        if (Robot.read_index == Robot.READ_RATE):
+            Robot.read_index = 0
+            Robot.update_subsystems()
         
         Robot.calculateKinematics()
         
@@ -137,8 +171,10 @@ class Robot:
             Robot.shoulder.set_angle(Robot.shoulder_angle)
             Robot.elbow.set_angle(Robot.elbow_angle)
         Robot.telemetry = Robot.status()
-    def flip():
+    def flip_kinematics():
         Robot.inverse_kinematics = not Robot.inverse_kinematics
+    def flip_autonomous():
+        Robot.autonomous = not Robot.autonomous
     def turn_off():
         Robot.on = False
     def end():

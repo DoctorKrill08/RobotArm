@@ -80,8 +80,12 @@ class RobotGUI(SystemGUI):
         self.end_button.pack(fill = 'x')
 
         self.kinematics_button = tk.Button(self.frame, text="Inverse Kinematics Off", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
-        self.kinematics_button.config(command=lambda: Robot.flip())
+        self.kinematics_button.config(command=lambda: Robot.flip_kinematics())
         self.kinematics_button.pack(fill = 'x')
+
+        self.autonomous_button = tk.Button(self.frame, text="Autonomous Off", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
+        self.autonomous_button.config(command=lambda: Robot.flip_autonomous())
+        self.autonomous_button.pack(fill = 'x')
 
         self.x_up_button = tk.Button(self.frame, text="X Up", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.INCREMENT_COLOR)
         self.x_up_button.config(command=lambda: Robot.x_up())
@@ -106,6 +110,8 @@ class RobotGUI(SystemGUI):
     def update(self,tk):
         self.setTelemetry(Robot.telemetry)
         self.kinematics_button.config(text=f"Inverse Kinematics On: {Robot.inverse_kinematics}")
+        self.autonomous_button.config(text=f"Autonomous On: {Robot.autonomous}")
+
 
 class SubsystemGUI(SystemGUI):
     def __init__(self,tk,root,subsystem):
