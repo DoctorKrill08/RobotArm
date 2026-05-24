@@ -24,7 +24,7 @@ class Interface:
         self.robot_gui = RobotGUI(tk,self.root)
         self.robot_gui.place(200,0)
         self.wrist_gui = ArmGUI(tk,self.root,Robot.wrist)
-        self.wrist_gui.place(200,400)
+        self.wrist_gui.place(400,200)
     update_index = 0
     def update(self):
         if (not self.update_index == 2):
@@ -74,7 +74,7 @@ class SystemGUI:
 class RobotGUI(SystemGUI):
     def __init__(self,tk,root):
         super().__init__(tk, root,"Robot")
-        self.frame.place(width=200,height=400)
+        self.frame.place(width=200,height=600)
         self.end_button = tk.Button(self.frame, text="Turn Off Robot", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
         self.end_button.config(command=lambda: Robot.turn_off())
         self.end_button.pack(fill = 'x')
@@ -104,7 +104,7 @@ class RobotGUI(SystemGUI):
         self.y_down_button.pack(fill = 'x')
 
         self.create_telemetry()
-        self.size(200,200)
+        self.size(200,400)
         
 
     def update(self,tk):

@@ -80,18 +80,26 @@ class Motor():
         target = round(target)
         if target > 400:
             target = 400
+        if (target == self.target):
+            return
         self.max_amperage = target
         self.comm_result, self.error = Motor.packetHandler.write2ByteTxRx(Motor.portHandler, self.dxl_id, Motor.TARGET_CURRENT_ADDRESS, self.max_amperage)
     def set_position(self,target):
         target = round(target)
+        if (target == self.target):
+            return
         self.target = target
         self.comm_result, self.error = Motor.packetHandler.write4ByteTxRx(Motor.portHandler, self.dxl_id, Motor.TARGET_POSITION_ADDRESS, self.target)
     def set_velocity(self,target):
         target = round(target)
+        if (target == self.target):
+            return
         self.target = target
         self.comm_result, self.error = Motor.packetHandler.write4ByteTxRx(Motor.portHandler, self.dxl_id, Motor.TARGET_VELOCITY_ADDRESS, self.target)
     def set_mode(self,mode):
         self.mode = mode
+        if (mode == self.mode):
+            return
         self.comm_result, self.error = Motor.packetHandler.write1ByteTxRx(Motor.portHandler, self.dxl_id, Motor.OPERATING_MODE_ADDRESS, Motor.mode_to_id(mode))
     def set_on(self,on):
         #convert boolean to binary
@@ -99,7 +107,7 @@ class Motor():
         if on:
             data = 1
         Motor.packetHandler.write1ByteTxRx(Motor.portHandler, self.dxl_id, Motor.TORQUE_ADDRESS, data)
-    def update(self):
+    def read(self):
         if (self.mode == Modes.POSITION or self.mode == Modes.CURRENT_BASED_POSITION):
             self.position, self.comm_result, self.error = Motor.packetHandler.read4ByteTxRx(Motor.portHandler, self.dxl_id, Motor.POSITION_ADDRESS)
             self.angle = self.position * 0.088
@@ -129,7 +137,7 @@ class Subsystem():
         self.set_target(self.target - self.move_increment)
     def flip(self):
         self.on = not self.on
-    def update(self):
+    def read(self):
         self.telemetry = f"On: {self.on}\nState: {self.state}\n{Motor.empty_status_with_target(self.mode,self.target)}"
 
 class ClawStates(Enum):
@@ -137,7 +145,6 @@ class ClawStates(Enum):
     CLOSE = "CLOSE"
 
 class Claw(Subsystem):
-    KP = 0.045
     #Open = min
     #Closed = max
     def __init__(self):
@@ -149,8 +156,7 @@ class Claw(Subsystem):
         self.target = self.min
         self.name = "CLAW"
         self.motor0 = Motor(15,self.mode)
-        self.motor0.set_mode(self.mode)
-        self.motor0.update()
+        self.motor0.read()
     def set_target(self,target):
         self.target = target
         if (self.target > self.max):
@@ -158,20 +164,29 @@ class Claw(Subsystem):
         if (self.target < self.min):
             self.target = self.min
         self.motor0.set_position(target)
+    def set_state(self,state):
+        if (state == self.state):
+            return
+        self.state = state
+        if (state == ClawStates.OPEN):
+            self.set_target(self.max)
+            self.motor0.set_current(400)
+        if (state == ClawStates.CLOSE):
+            self.set_target(self.min)
+            self.motor0.set_current(50)
     def flip_claw_state(self):
         if (self.state == ClawStates.OPEN):
             self.state = ClawStates.CLOSE
             self.set_target(self.max)
             self.motor0.set_current(400)
         else:
-            pos_error = abs(self.target - self.motor0.position)
             self.state = ClawStates.OPEN
             self.set_target(self.min)
             self.motor0.set_current(50)
-    def update(self):
+    def read(self):
         self.telemetry = self.motor0.status()
         self.motor0.set_on(self.on)
-        self.motor0.update()
+        self.motor0.read()
 
 class Arm(Subsystem):
     length = 0
@@ -180,6 +195,8 @@ class Arm(Subsystem):
         self.move_increment = 0
         self.name = "Arm"
     def set_target(self,target):
+        if (self.target == target):
+            return
         self.target = target
         if (self.target > self.max):
             self.target = self.max
@@ -199,7 +216,7 @@ class Elbow(Arm):
        self.move_increment = 40
        self.motor0 = Motor(13,self.mode)
        self.motor0.set_mode(self.mode)
-       self.motor0.update()
+       self.motor0.read()
        self.target = self.motor0.position
        self.max = 3700
        self.min = 400
@@ -209,9 +226,9 @@ class Elbow(Arm):
             return
         self.angle = angle
         self.set_target((angle + 180) / Motor.POS_TO_ANGLE)
-    def update(self):
+    def read(self):
         self.telemetry = self.motor0.status()
-        self.motor0.update()
+        self.motor0.read()
          #special angle calculations for elbow (degrees)
         self.angle =self.motor0.angle - 180
         self.telemetry = f"{self.telemetry}\nAdjusted Angle: {self.angle}"
@@ -224,7 +241,7 @@ class Shoulder(Arm):
        self.move_increment = 40
        self.motor0 = Motor(11,self.mode)
        self.motor0.set_mode(self.mode)
-       self.motor0.update()
+       self.motor0.read()
        self.target = self.motor0.position
        self.max = 3165
        self.min = 1150
@@ -234,9 +251,9 @@ class Shoulder(Arm):
             return
         self.angle = angle
         self.set_target(((angle - 280) * -1) / Motor.POS_TO_ANGLE)
-    def update(self):
+    def read(self):
         self.telemetry = self.motor0.status()
-        self.motor0.update()
+        self.motor0.read()
         #special angle calculations for shoulder (degrees)
         self.angle =(-1 * self.motor0.angle) + 280
         self.telemetry = f"{self.telemetry}\nAdjusted Angle: {self.angle}"
@@ -251,7 +268,7 @@ class Wrist(Arm):
        self.move_increment = 60
        self.motor0 = Motor(14,self.mode)
        self.motor0.set_mode(self.mode)
-       self.motor0.update()
+       self.motor0.read()
        self.target = self.motor0.position
        self.max = 2572
        self.min = 431
@@ -260,9 +277,9 @@ class Wrist(Arm):
             self.set_target(self.SIDE_POS)
         else:
             self.set_target(self.STRAIGHT_POS)
-    def update(self):
+    def read(self):
         self.telemetry = self.motor0.status()
-        self.motor0.update()
+        self.motor0.read()
 
 class Turret(Subsystem):
     def __init__(self):
@@ -284,11 +301,11 @@ class Turret(Subsystem):
         super().flip()
         self.target = 0
         self.motor0.set_on(self.on)
-    def update(self):
+    def read(self):
         self.telemetry = self.motor0.status()
         if not self.on:
             self.target = 0
-        self.motor0.update()
+        self.motor0.read()
 
        
 
