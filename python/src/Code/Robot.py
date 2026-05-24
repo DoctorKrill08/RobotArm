@@ -99,9 +99,9 @@ class Robot:
         if abs(x) < Robot.BASE_X:
             if (y < Robot.BASE_Y):
                 y = Robot.BASE_Y
-        if (abs(x - Robot.goal_x) < 0.3):
+        if (abs(x - Robot.goal_x) < 0.1):
             return
-        if (abs(y - Robot.goal_y) < 0.3):
+        if (abs(y - Robot.goal_y) < 0.1):
             return
 
         r = math.hypot(x,y)
@@ -167,12 +167,12 @@ class Robot:
         Robot.auto_state_timer.go()
 
     def auto_update():
-        Camera.update()
         Robot.wrist.set_target(Wrist.STRAIGHT_POS)
         if (Robot.auto_state == AutoState.RESTING):
             Robot.set_goal(Robot.SCOUTING_X,Robot.SCOUTING_Y)
             return
         if (Robot.auto_state == AutoState.SCOUTING):
+            Camera.update()
             Robot.claw.set_state(ClawStates.OPEN)
             Robot.set_goal(Robot.SCOUTING_X,Robot.SCOUTING_Y)
             Robot.camera_error = 0
@@ -185,18 +185,20 @@ class Robot:
                 Robot.camera_error = error
                 if (abs(Robot.camera_error) < Robot.CAMERA_WITHIN_ERROR):
                     Robot.set_auto_state(AutoState.REACHING)
+                    Camera.end()
             Robot.rotate_to(Robot.camera_error)
             return
         if (Robot.auto_state == AutoState.REACHING):
             Robot.set_goal(lerp(Robot.SCOUTING_X,Robot.REACH_X,Robot.auto_state_timer.time_passed_seconds(),Robot.REACH_TIME),
                            lerp(Robot.SCOUTING_Y,Robot.REACH_Y,Robot.auto_state_timer.time_passed_seconds(),Robot.REACH_TIME))
-            if (abs(Robot.goal_x - Robot.REACH_X) < 0.1):
+            if (Robot.auto_state_timer.time_passed_seconds() > Robot.REACH_TIME):
                 Robot.set_auto_state(AutoState.GRAB)
             return
         if (Robot.auto_state == AutoState.GRAB):
             Robot.claw.set_state(ClawStates.CLOSE)
-            if (Robot.auto_state_timer.time_passed_seconds() < Robot.GRAB_TIME):
+            if (Robot.auto_state_timer.time_passed_seconds() > Robot.GRAB_TIME):
                 Robot.set_auto_state(AutoState.RESTING)
+                Robot.autonomous = False
             return
 
     def rotate_to(error):

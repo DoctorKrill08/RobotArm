@@ -60,7 +60,7 @@ class Camera():
             cnt = contours[i]
             M = cv2.moments(cnt)
             area = M['m00']
-            if (area  < 300):
+            if (area  < 900):
                 continue
             rect = cv2.minAreaRect(cnt)
             (cx, cy), (w, h), angle = rect
@@ -71,14 +71,43 @@ class Camera():
             x0,y0 = box[0]
             x1,y1 = box[1]
             x3,y3 = box[3]
+            x,y = 0,0
+            d1 = distance(x0,y0,x1,y1)
+            d3 = distance(x0,y0,x3,y3)
+            d = 0
+            short = 0
+            if (d1 >= d3):
+                x,y = x1,y1
+                d = d1
+                short = d3
+            else:
+                x,y = x3,y3
+                d = d3
+                short = d1
+            theta = math.atan2(-(y-y0),x-x0)
+            theta = abs(theta * 180/math.pi)
 
-            Camera.visible = True
-            Camera.target_x = round(cx)
-            Camera.target_y = round(cy)
-            # Draw a point (a filled circle with radius 2)
-            cv2.circle(drawing, (Camera.target_x,Camera.target_y), 2, (0, 255, 0), -1)
-            cv2.drawContours(drawing,[box],0,(0,0,255),2)
-            cv2.drawContours(drawing, contours, i, (0,255,0), 3)
+            true_width = 0
+            true_height = 0
+            if ((theta > 0 and theta < 45) or 
+                (theta > 135 and theta < 225) or
+                (theta > 315)):
+                true_width = d
+                true_height = short
+            else:
+                true_width = short
+                true_height = d
+            if (area / a < 0.6):
+                continue
+            if (w > 50 and true_height > 20 and area < 200000 and (true_width/true_height > .5) and (((true_width / true_height) < 1.2 and theta > 60 and theta < 150) or (y0 >= 450))):
+                Camera.visible = True
+                Camera.target_x = round(cx)
+                Camera.target_y = round(cy)
+                # Draw a point (a filled circle with radius 2)
+                cv2.circle(drawing, (Camera.target_x,Camera.target_y), 2, (0, 255, 0), -1)
+                cv2.drawContours(drawing,[box],0,(0,0,255),2)
+                cv2.drawContours(drawing, contours, i, (0,255,0), 3)
+                break
         cv2.imshow('Red Contour', drawing)
     def status():
          return f"Visible: {Camera.visible}\n target x: {Camera.target_x}\n target y: {Camera.target_y}\n error x: {Camera.CENTER_X - Camera.target_x}\n erorr y: {Camera.CENTER_Y - Camera.target_y}"

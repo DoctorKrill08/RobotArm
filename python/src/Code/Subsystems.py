@@ -59,7 +59,7 @@ class Motor():
         self.amperage = None
         self.velocity = None
         self.max_power = 0
-        self.max_amperage = 0
+        self.target_amp = 0
         self.target = 0
         self.amperage = 0
         self.voltage = 0
@@ -82,8 +82,8 @@ class Motor():
             target = 400
         if (target == self.target):
             return
-        self.max_amperage = target
-        self.comm_result, self.error = Motor.packetHandler.write2ByteTxRx(Motor.portHandler, self.dxl_id, Motor.TARGET_CURRENT_ADDRESS, self.max_amperage)
+        self.target_amp = target
+        self.comm_result, self.error = Motor.packetHandler.write2ByteTxRx(Motor.portHandler, self.dxl_id, Motor.TARGET_CURRENT_ADDRESS, target)
     def set_position(self,target):
         target = round(target)
         if (target == self.target):
@@ -114,7 +114,7 @@ class Motor():
         elif (self.mode == Modes.VELOCITY):
             self.velocity,_, _ = Motor.packetHandler.read4ByteTxRx(Motor.portHandler, self.dxl_id, Motor.VELOCITY_ADDRESS)
     def status(self):
-        return f"Mode: {self.mode.value}\nPosition: {self.position}\nAmperage: {self.amperage}\nVelocity: {self.velocity}\nTarget {self.mode.value}: {self.target}\nAngle: {self.angle}"
+        return f"Target {self.mode.value}: {self.target}"
     @staticmethod
     def empty_status_with_target(mode,target):
         return f"Mode: {mode.value} Present: N/A\nAmperage: N/A\nTarget: {round(target, 4)}"
@@ -147,6 +147,9 @@ class ClawStates(Enum):
 class Claw(Subsystem):
     #Open = min
     #Closed = max
+    OPEN_AMP = 200
+    CLOSE_AMP = 30
+
     def __init__(self):
         super().__init__()
         self.state = ClawStates.OPEN
@@ -165,28 +168,25 @@ class Claw(Subsystem):
             self.target = self.min
         self.motor0.set_position(target)
     def set_state(self,state):
-        if (state == self.state):
-            return
         self.state = state
         if (state == ClawStates.OPEN):
-            self.set_target(self.max)
-            self.motor0.set_current(400)
-        if (state == ClawStates.CLOSE):
             self.set_target(self.min)
-            self.motor0.set_current(50)
+            self.motor0.set_current(self.OPEN_AMP)
+        if (state == ClawStates.CLOSE):
+            self.set_target(self.max)
+            self.motor0.set_current(self.CLOSE_AMP)
     def flip_claw_state(self):
         if (self.state == ClawStates.OPEN):
             self.state = ClawStates.CLOSE
             self.set_target(self.max)
-            self.motor0.set_current(400)
+            self.motor0.set_current(self.CLOSE_AMP)
         else:
             self.state = ClawStates.OPEN
             self.set_target(self.min)
-            self.motor0.set_current(50)
+            self.motor0.set_current(self.OPEN_AMP)
     def read(self):
-        self.telemetry = self.motor0.status()
-        self.motor0.set_on(self.on)
-        self.motor0.read()
+        super().read()
+        self.telemetry = f"{self.telemetry}\n Target Amperage: {self.motor0.target_amp}"
 
 class Arm(Subsystem):
     length = 0
@@ -203,6 +203,9 @@ class Arm(Subsystem):
         if (self.target < self.min):
             self.target = self.min
         self.motor0.set_position(target)
+    def read(self):
+        super().read()
+        self.telemetry = f"{self.telemetry}\n Angle: {self.motor0.angle}"
     def flip(self):
         super().flip()
         self.target = self.motor0.position
@@ -247,7 +250,7 @@ class Shoulder(Arm):
        self.min = 1150
        self.angle = 0
     def set_angle(self,angle):
-        if abs(angle - self.angle) < 1:
+        if abs(angle - self.angle) < 0.5:
             return
         self.angle = angle
         self.set_target(((angle - 280) * -1) / Motor.POS_TO_ANGLE)
