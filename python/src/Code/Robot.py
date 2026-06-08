@@ -35,7 +35,7 @@ class Robot:
     SCOUTING_Y = 5.5
 
     REACH_X = 18
-    REACH_Y = 2
+    REACH_Y = 1.5
 
 
     x = 0
