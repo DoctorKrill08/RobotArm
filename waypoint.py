@@ -28,7 +28,7 @@ CURRENT_UNIT_MA = 2.69   # mA per tick
 # ─── Port / Protocol ─────────────────────────────────────────────────────────
 PROTOCOL_VERSION = 2.0
 BAUDRATE         = 1000000
-DEVICENAME       = 'COM6'   # ← change to your port
+DEVICENAME       = 'COM3'   # ← change to your port
 
 # ─── Servo IDs ────────────────────────────────────────────────────────────────
 ID_BASE     = 10

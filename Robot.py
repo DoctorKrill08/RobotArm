@@ -45,7 +45,7 @@ class Robot:
     SCOUTING_Y = 5.5
 
     REACH_X = 18
-    REACH_Y = 1.5
+    REACH_Y = 1
 
 
     x = 0
@@ -71,8 +71,8 @@ class Robot:
 
     CAMERA_WITHIN_ERROR = 3
     SCOUT_LOAD_TIME = 1
-    SCOUTING_TIME = 3.5
-    REACH_TIME = 2.5
+    SCOUTING_TIME = 5
+    REACH_TIME = 3.5
     GRAB_TIME = 1
 
     camera_error = 0
