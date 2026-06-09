@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from enum import Enum
 
-from dynamixel_sdk  import *
+from dynamixel_sdk import *
 
 #portHandler = PortHandler("COM3")  # TODO Find out what the port name for claw is
 #packetHandler = PacketHandler(2.0)  # protocol version
@@ -23,7 +23,7 @@ else:
   print("Failed to change the baudrate!")
   exit()
 
-dxl_id = 10
+dxl_id = 14
 torque_on_address = 64
 data = 1
 dxl_comm_result, dxl_error = packetHandler.write1ByteTxRx(portHandler, dxl_id, torque_on_address, data)
