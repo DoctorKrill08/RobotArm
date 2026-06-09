@@ -167,9 +167,10 @@ class Wrist(Arm):
         self.motor0.read()
 
 class Turret(Subsystem):
+    MODE = Modes.VELOCITY
     def __init__(self):
         super().__init__()
-        self.mode = Modes.VELOCITY
+        self.mode = Turret.MODE
         self.move_increment = 8
         self.name = "Turret"
         self.motor0 = Motor(10,self.mode)
@@ -186,6 +187,7 @@ class Turret(Subsystem):
         super().flip()
         self.target = 0
         self.motor0.set_on(self.on)
+        self.motor0.set_mode(Turret.MODE)
     def read(self):
         self.telemetry = self.motor0.status()
         if not self.on:

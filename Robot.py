@@ -5,6 +5,10 @@ from timer import Timer
 from motor import *
 from subsystems import Subsystem
 
+def truncate(number, decimals=0):
+    factor = 10 ** decimals
+    return int(number * factor) / factor
+
 def lerp(start,goal,time_passed,total_time):
         x = time_passed / total_time
         if (x > 1):
@@ -80,7 +84,7 @@ class Robot:
 
 
     def status():
-        return f"Auto State: {Robot.auto_state.value}\n Camera Error: {Robot.camera_error}\n Auto Time Passed: {Robot.auto_state_timer.time_passed_seconds()}\n x: {Robot.x}\ny: {Robot.y}\ngoal x: {Robot.goal_x}\ngoal y: {Robot.goal_y}\nshoulder angle: {Robot.shoulder_angle}\nelbow angle: {Robot.elbow_angle}\n{Camera.status()}"
+        return f"Auto State: {Robot.auto_state.value}\n Camera Error: {Robot.camera_error}\n Auto Time Passed: {truncate(Robot.auto_state_timer.time_passed_seconds(),3)}\n x: {Robot.x}\ny: {Robot.y}\ngoal x: {Robot.goal_x}\ngoal y: {Robot.goal_y}\nshoulder angle: {Robot.shoulder_angle}\nelbow angle: {Robot.elbow_angle}\n{Camera.status()}"
 
 
     def calculateKinematics():
@@ -149,7 +153,13 @@ class Robot:
             Robot.wrist.rotate()
         if (not Robot.inverse_kinematics):
             return
-        Robot.set_goal(Robot.goal_x + (left_stick_y * Robot.JOYSTICK_SENSITIVITY),Robot.goal_y + (right_stick_y * Robot.JOYSTICK_SENSITIVITY))
+        deltaLeft = (left_stick_y * Robot.JOYSTICK_SENSITIVITY)
+        if (abs(deltaLeft) < 0.05):
+            deltaLeft = 0
+        deltaRight = (right_stick_y * Robot.JOYSTICK_SENSITIVITY)
+        if (abs(deltaRight) < 0.05):
+            deltaRight = 0
+        Robot.set_goal(Robot.goal_x + deltaLeft,Robot.goal_y + deltaRight)
         Robot.turret.set_target((right_stick_x ** 3) * -Robot.TURRET_SENSITIVITY)
     
     def start():
@@ -275,9 +285,8 @@ class Robot:
         Camera.destroy_windows()
 
     def end():
+        Camera.end()
         Motor.data = 0
         for id in Motor.all_motors:
             Motor.end_motor(id)
         Motor.all_motors.clear()
-        Motor.close_port()
-        Camera.end()

@@ -1,9 +1,12 @@
-from interface import Interface
-from robot import Robot
+from arm_interface import Interface
 from controller import XboxController
+from robot import Robot
+
 import time
+
 Robot.start()
 interface = Interface()
+
 gamepad_connected = False
 
 def attempt_connect_controller():
@@ -21,9 +24,8 @@ xbox_controller,gamepad_connected = attempt_connect_controller()
 TARGET_HZ = 60
 DT = 1 / TARGET_HZ
 
-INTERFACE_FRAME_RATE = 5
+INTERFACE_FRAME_RATE = 1
 update_interface_index = 0
-
 
 while Robot.on:
     start = time.perf_counter()
@@ -33,6 +35,7 @@ while Robot.on:
         update_interface_index = 0
     
     Robot.update()
+
 
     if (gamepad_connected and not Robot.autonomous):
         Robot.control(

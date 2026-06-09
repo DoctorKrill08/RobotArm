@@ -4,11 +4,12 @@ class Modes(Enum):
     POSITION = "POSITION" 
     CURRENT = "CURRENT"
     CURRENT_BASED_POSITION = "CURRENT_BASED_POSITION"
+    EXTENDED_POSITION = "EXTENDED_POSITION"
 
 class Motor():
     dynamixel_connected = True
     all_motors = []
-    port_handler = None;
+    port_handler = None
     packet_handler = None
     group_bulk_read = None
     group_bulk_write = None
@@ -24,7 +25,7 @@ class Motor():
             Motor.packet_handler = PacketHandler(2.0)
             Motor.group_bulk_read = GroupBulkRead(Motor.port_handler, Motor.packet_handler)
             Motor.group_bulk_write = GroupBulkRead(Motor.port_handler, Motor.packet_handler)
-            Motor.port_handler.setBaudRate(57600)
+            Motor.port_handler.setBaudRate(1000000)
         except:
             Motor.dynamixel_connected = False
 
@@ -32,6 +33,8 @@ class Motor():
 
     @staticmethod
     def end_motor(id):
+        if (Motor.dynamixel_connected == False):
+            return
         Motor.packet_handler.write1ByteTxRx(Motor.port_handler, id, Motor.torque_on_address, 0)
 
     POS_TO_ANGLE = 0.088
@@ -47,6 +50,7 @@ class Motor():
     OPERATING_MODE_ADDRESS = 11
     VELOCITY_OPERATING_ID = 1
     POSITION_OPERATING_ID = 3
+    EXTENDED_POSITION_ID = 4
     CURRENT_BASED_POSITION_OPERATING_ID = 5
     CURRENT_OPERATING_ID = 0
 
@@ -58,6 +62,8 @@ class Motor():
             return Motor.POSITION_OPERATING_ID
         elif mode == Modes.CURRENT_BASED_POSITION:
             return Motor.CURRENT_BASED_POSITION_OPERATING_ID
+        elif mode == Modes.EXTENDED_POSITION:
+            return Motor.EXTENDED_POSITION_ID
         return Motor.CURRENT_OPERATING_ID
     
     def __init__(self,id,mode):
@@ -74,6 +80,7 @@ class Motor():
         self.power = 0
         self.dxl_id = id
         self.data = 1
+        self.on = True
         self.set_mode(mode)
         if (Motor.dynamixel_connected == False):
             return
@@ -112,11 +119,13 @@ class Motor():
         self.comm_result, self.error = Motor.packet_handler.write4ByteTxRx(Motor.port_handler, self.dxl_id, Motor.TARGET_VELOCITY_ADDRESS, self.target)
     def set_mode(self,mode):
         self.mode = mode
-        if (mode == self.mode):
-            return
         if (Motor.dynamixel_connected == False):
             return
+        #Torque must be off to switch modes
+        if (self.on):
+            self.set_on(False)
         self.comm_result, self.error = Motor.packet_handler.write1ByteTxRx(Motor.port_handler, self.dxl_id, Motor.OPERATING_MODE_ADDRESS, Motor.mode_to_id(mode))
+        self.set_on(True)
     def set_on(self,on):
         #convert boolean to binary
         data = 0
@@ -124,11 +133,14 @@ class Motor():
             data = 1
         if (Motor.dynamixel_connected == False):
             return
+        if (on == self.on):
+            return
+        self.on = on
         Motor.packet_handler.write1ByteTxRx(Motor.port_handler, self.dxl_id, Motor.TORQUE_ADDRESS, data)
     def read(self):
         if (Motor.dynamixel_connected == False):
             return
-        if (self.mode == Modes.POSITION or self.mode == Modes.CURRENT_BASED_POSITION):
+        if (self.mode == Modes.POSITION or self.mode == Modes.CURRENT_BASED_POSITION or self.mode == Modes.EXTENDED_POSITION):
             self.position, self.comm_result, self.error = Motor.packet_handler.read4ByteTxRx(Motor.port_handler, self.dxl_id, Motor.POSITION_ADDRESS)
             self.angle = self.position * 0.088
         elif (self.mode == Modes.VELOCITY):
@@ -137,7 +149,7 @@ class Motor():
         return f"Target {self.mode.value}: {self.target}"
     @staticmethod
     def empty_status_with_target(mode,target):
-        return f"Mode: {mode.value} Present: N/A\nAmperage: N/A\nTarget: {round(target, 4)}"
+        return f"Mode: {mode.value} \nTarget: {round(target, 4)}"
 
 Motor.dynamixel_connected = True
 try:

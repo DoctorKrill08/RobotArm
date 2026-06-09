@@ -1,6 +1,7 @@
 import tkinter as tk
 from enum import Enum
 from robot import Robot
+from motor import Motor
 from CameraStuff.blob_contour import Camera
 #Buttons:
 #Open/Close Claw
@@ -11,9 +12,11 @@ from CameraStuff.blob_contour import Camera
 class Interface:
     def __init__(self):
         self.root = tk.Tk()
+        self.root.resizable(False, False)
         self.root.title("Arm Interface")
         self.root.geometry("600x600")
         self.root.configure(bg='black')
+        self.root.protocol("WM_DELETE_WINDOW", Robot.turn_off)
         self.claw_gui = ClawGUI(tk,self.root,Robot.claw)
         self.claw_gui.place(0,0)
         self.elbow_gui = ArmGUI(tk,self.root,Robot.elbow)
@@ -48,6 +51,7 @@ class SystemGUI:
     FRAME_COLOR = "#1C1E1C"
     TEXT_COLOR = "#FFFFFF"
     TELEMETRY_BACKGROUND_COLOR = "#141414"
+    WARNING_COLOR = "#FF8400"
     def __init__(self,tk,root,title):
         self.tk = tk
         self.frame = tk.Frame(root)
@@ -76,7 +80,10 @@ class RobotGUI(SystemGUI):
     def __init__(self,tk,root):
         super().__init__(tk, root,"Robot")
         self.frame.place(width=200,height=600)
-        
+
+        self.connection_label = tk.Label(self.frame, text = "NOT CONNECTED", bg = SystemGUI.FRAME_COLOR, fg = "#FF8400")
+        self.connection_label.pack(fill = 'x')
+
         self.off_button = tk.Button(self.frame, text="Turn Off", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
         self.off_button.config(command=lambda: Robot.turn_off())
         self.off_button.pack(fill = 'x')
@@ -118,6 +125,12 @@ class RobotGUI(SystemGUI):
         self.kinematics_button.config(text=f"Inverse Kinematics On: {Robot.inverse_kinematics}")
         self.autonomous_button.config(text=f"Autonomous On: {Robot.autonomous}")
         self.camera_button.config(text=f"Camera On: {Camera.Ready}")
+        if (Motor.dynamixel_connected):
+            self.connection_label.config(text = "MOTORS CONNECTED")
+            self.connection_label.config(fg = SystemGUI.TELEMETRY_TEXT_COLOR)
+        else:
+            self.connection_label.config(text = "MOTORS NOT CONNECTED")
+            self.connection_label.config(fg = SystemGUI.WARNING_COLOR)
 
 
 class SubsystemGUI(SystemGUI):
