@@ -177,10 +177,7 @@ class Turret(Subsystem):
         self.motor0.set_mode(self.mode)
     def set_target(self,target):
         if (abs(target) < 2):
-            if (self.motor0.velocity == 0):
-                return
-            else:
-                target = 0
+            target = 0
         self.target = target
         self.motor0.set_velocity(target)
     def flip(self):

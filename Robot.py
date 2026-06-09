@@ -54,8 +54,8 @@ class Robot:
     goal_y = 0
     heading = 0
 
-    FLOOR_Y = 0.5
-    BASE_X = 5.5
+    FLOOR_Y = 1
+    BASE_X = 6.5
     BASE_Y = 5
 
     shoulder_angle = 0
@@ -70,9 +70,9 @@ class Robot:
     READ_RATE = 60
 
     CAMERA_WITHIN_ERROR = 3
-    SCOUT_LOAD_TIME = 2
-    SCOUTING_TIME = 6
-    REACH_TIME = 3
+    SCOUT_LOAD_TIME = 1
+    SCOUTING_TIME = 3.5
+    REACH_TIME = 2.5
     GRAB_TIME = 1
 
     camera_error = 0
@@ -81,6 +81,7 @@ class Robot:
 
     on = True
 
+    controller_connected = False
 
 
     def status():
@@ -144,13 +145,46 @@ class Robot:
     def y_down():
         Robot.set_goal(Robot.goal_x, Robot.goal_y - Robot.goal_increment)
     
-    def control(right_stick_y,left_stick_y,right_stick_x,rb_was_pressed,lb_was_pressed):
+    def control(gamepad):
+        if Robot.autonomous and not Robot.auto_state == AutoState.SCOUTING:
+            Robot.turret.set_target(0)
+        if not Robot.controller_connected:
+            return
+        rb_was_pressed = gamepad.rb_was_pressed()
+        lb_was_pressed = gamepad.lb_was_pressed()
+        rt_was_pressed = gamepad.rt_was_pressed()
+        y_was_pressed = gamepad.y_was_pressed()
+        a_was_pressed = gamepad.a_was_pressed()
+        b_was_pressed = gamepad.b_was_pressed()
+        x_was_pressed = gamepad.x_was_pressed()
+
+
+        left_stick_y = gamepad.LeftJoystickY
+        right_stick_y = gamepad.RightJoystickY
+        right_stick_x = gamepad.RightJoystickX
+        
+        if (a_was_pressed):
+            Robot.flip_autonomous()
+        if (x_was_pressed):
+            Robot.flip_camera()
+        if (rt_was_pressed):
+            if (not Robot.auto_state == AutoState.RESTING):
+                Robot.set_auto_state(AutoState.RESTING)
+            else:
+                Robot.autonomous = True
+                Robot.set_auto_state(AutoState.REACHING)
+        if (b_was_pressed):
+            Robot.end()
+
+        if (Robot.autonomous):
+            return
+
         if (rb_was_pressed):
-            Robot.prev_rb = True
             Robot.claw.flip_claw_state()
         if (lb_was_pressed):
-            Robot.prev_lb = True
             Robot.wrist.rotate()
+        if (y_was_pressed):
+            Robot.flip_kinematics()
         if (not Robot.inverse_kinematics):
             return
         deltaLeft = (left_stick_y * Robot.JOYSTICK_SENSITIVITY)
@@ -179,6 +213,8 @@ class Robot:
     def set_auto_state(state):
         if state == Robot.auto_state:
             return
+        if state == AutoState.REACHING or state == AutoState.SCOUTING:
+            Robot.claw.set_state(ClawStates.OPEN)
         Robot.auto_state = state
         Robot.auto_state_timer.go()
 
@@ -285,8 +321,8 @@ class Robot:
         Camera.destroy_windows()
 
     def end():
-        Camera.end()
         Motor.data = 0
         for id in Motor.all_motors:
             Motor.end_motor(id)
         Motor.all_motors.clear()
+        Camera.end()

@@ -83,6 +83,9 @@ class RobotGUI(SystemGUI):
 
         self.connection_label = tk.Label(self.frame, text = "NOT CONNECTED", bg = SystemGUI.FRAME_COLOR, fg = "#FF8400")
         self.connection_label.pack(fill = 'x')
+        
+        self.controller_label = tk.Label(self.frame, text = "CONTROLLER NOT CONNECTED", bg = SystemGUI.FRAME_COLOR, fg = "#FF8400")
+        self.controller_label.pack(fill = 'x')
 
         self.off_button = tk.Button(self.frame, text="Turn Off", bg = SystemGUI.FRAME_COLOR, fg = SystemGUI.TEXT_COLOR)
         self.off_button.config(command=lambda: Robot.turn_off())
@@ -131,6 +134,12 @@ class RobotGUI(SystemGUI):
         else:
             self.connection_label.config(text = "MOTORS NOT CONNECTED")
             self.connection_label.config(fg = SystemGUI.WARNING_COLOR)
+        if (Robot.controller_connected):
+            self.controller_label.config(text = "CONTROLLER CONNECTED")
+            self.controller_label.config(fg = SystemGUI.TELEMETRY_TEXT_COLOR)
+        else:
+            self.controller_label.config(text = "CONTROLLER NOT CONNECTED")
+            self.controller_label.config(fg = SystemGUI.WARNING_COLOR)
 
 
 class SubsystemGUI(SystemGUI):

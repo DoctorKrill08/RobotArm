@@ -1,7 +1,7 @@
 from inputs import get_gamepad
 import math
 import threading
-
+TRIGGER_DOWN_THRESHOLD = 0.2
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
     MAX_JOY_VAL = math.pow(2, 15)
@@ -29,8 +29,9 @@ class XboxController(object):
         self.UpDPad = 0
         self.DownDPad = 0
 
-        self.prevLeftTrigger = 0
-        self.prevRightTrigger = 0
+        self.prev_lt_down = 0
+        self.prev_rt_down = 0
+
         self.prevLeftBumper = 0
         self.prevRightBumper = 0
         self.prevA = 0
@@ -47,7 +48,8 @@ class XboxController(object):
         self._monitor_thread = threading.Thread(target=self._monitor_controller, args=())
         self._monitor_thread.daemon = True
         self._monitor_thread.start()
-
+    def is_connected(self):
+        return self._monitor_thread.is_alive()
     def rb_was_pressed(self):
         result = self.RightBumper and not self.prevRightBumper
         if (result):
@@ -58,7 +60,35 @@ class XboxController(object):
         if (result):
             self.prevLeftBumper = self.LeftBumper
         return result
+    def a_was_pressed(self):
+        result = self.A and not self.prevA
+        if (result):
+            self.A = self.prevA
+        return result
+    def b_was_pressed(self):
+        result = self.B and not self.prevB
+        if (result):
+            self.prevB = self.B
+        return result
+    def y_was_pressed(self):
+        result = self.Y and not self.prevY
+        if (result):
+            self.prevY = self.Y
+        return result
+    def x_was_pressed(self):
+        result = self.X and not self.prevX
+        if (result):
+            self.prevX = self.X
+        return result
 
+    def rt_was_pressed(self):
+        rt_down = self.RightTrigger > TRIGGER_DOWN_THRESHOLD
+        if (not rt_down):
+            self.prev_rt_down = False
+            return False
+        result = rt_down and not self.prev_rt_down
+        self.prev_rt_down = True
+        return result
 
     def _monitor_controller(self):
         while True:
@@ -73,10 +103,8 @@ class XboxController(object):
                 elif event.code == 'ABS_RX':
                     self.RightJoystickX = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
                 elif event.code == 'ABS_Z':
-                    self.prevLeftTrigger = self.LeftTrigger
                     self.LeftTrigger = event.state / XboxController.MAX_TRIG_VAL # normalize between 0 and 1
                 elif event.code == 'ABS_RZ':
-                    self.prevRightTrigger = self.RightTrigger
                     self.RightTrigger = event.state / XboxController.MAX_TRIG_VAL # normalize between 0 and 1
                 elif event.code == 'BTN_TL':
                     self.prevLeftBumper = self.LeftBumper

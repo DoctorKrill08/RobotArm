@@ -19,7 +19,7 @@ def attempt_connect_controller():
         pass
     return xbox_controller, gamepad_connected
     
-xbox_controller,gamepad_connected = attempt_connect_controller()
+xbox_controller,Robot.controller_connected = attempt_connect_controller()
 
 TARGET_HZ = 60
 DT = 1 / TARGET_HZ
@@ -36,16 +36,11 @@ while Robot.on:
     
     Robot.update()
 
+    if (xbox_controller.is_connected() == False):
+        Robot.controller_connected = False
 
-    if (gamepad_connected and not Robot.autonomous):
-        Robot.control(
-            xbox_controller.RightJoystickY,
-            xbox_controller.LeftJoystickY,
-            xbox_controller.RightJoystickX,
-            xbox_controller.rb_was_pressed(),
-            xbox_controller.lb_was_pressed()
-        )
-
+    Robot.control(xbox_controller)
+    
     elapsed = time.perf_counter() - start
     sleep_time = DT - elapsed
 
