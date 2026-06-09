@@ -1,6 +1,5 @@
 from enum import Enum
 import math
-from Robot import *
 from motor import *
 
 class Subsystem():

@@ -1,6 +1,6 @@
-from ArmInterface import Interface
-from Robot import Robot
-from Controller import XboxController
+from interface import Interface
+from robot import Robot
+from controller import XboxController
 import time
 Robot.start()
 interface = Interface()

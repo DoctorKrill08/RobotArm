@@ -1,9 +1,9 @@
-from Subsystems import *
+from subsystems import *
 import atexit
-from BlobCountor import Camera
-from Timer import Timer
+from CameraStuff.blob_contour import Camera
+from timer import Timer
 from motor import *
-from Subsystems import Subsystem
+from subsystems import Subsystem
 
 def lerp(start,goal,time_passed,total_time):
         x = time_passed / total_time
