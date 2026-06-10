@@ -1,1 +1,36 @@
 Run either main.py or waypoint.py depending on what you want
+
+You need to have python (3.11 and 3.14 works, most versions around those should work) import dynamixel sdk, ultralytics (YOLO), inputs (for gamepad) opencv (cv2) 
+
+You can delete the cup data set and trainer if you want
+
+Setup python:
+Google python 3.14 and use that, it can work for lower version too. I am not sure about higher ones
+
+how to setup dynamixel sdk:
+Official instructions: https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/overview/#dynamixel-sdk
+
+download it: git clone https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+then add it to your python by:
+1. go to the dynamixel sdk folder you just downloaded and navigate to the python folder via file explorer and open the command promt via typing cmd in the file navigator
+2. Use this command if on windows:
+pip install .
+3. Check the motor.py file in this project and see if import dynamixel line is no longer marked
+
+how to setup cv2:
+Open the terminal/command promt and use this line:
+pip install opencv-python
+
+how to setup YOLO:
+Official instructions: https://github.com/ultralytics/ultralytics
+
+Download it via command promt/terminal:
+pip install ultralytics
+
+Check if its working by checking the Camera.py file and if import ultralytics is marked then:
+Download Microsoft Visual C++ Redistributable. Use the one marked X64
+https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170
+Once its installed restart computer and then the ultralytics import should be fixed
+
+for gamepad inputs run this line in terminal/command promt
+pip install inputs
