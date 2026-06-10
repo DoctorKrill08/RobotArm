@@ -1,6 +1,7 @@
-path: C:/Users/Admin/Robotics/RobotArm/CameraStuff/cup_dataset
+path: C:/Users/Admin/Robotics/RobotArm/CameraStuff/cup_detector/cup_dataset  # dataset root dir
 train: images
 val: images
 
+# Classes
 names:
-  31: cup
+  0: cup

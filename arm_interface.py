@@ -2,7 +2,7 @@ import tkinter as tk
 from enum import Enum
 from robot import Robot
 from motor import Motor
-from CameraStuff.blob_contour import Camera
+from CameraStuff.Camera import Camera
 #Buttons:
 #Open/Close Claw
 #Up/Down Forearm

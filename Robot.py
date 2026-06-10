@@ -1,6 +1,6 @@
 from subsystems import *
 import atexit
-from CameraStuff.blob_contour import Camera
+from CameraStuff.Camera import Camera
 from timer import Timer
 from motor import *
 from subsystems import Subsystem
@@ -69,7 +69,7 @@ class Robot:
 
     READ_RATE = 60
 
-    CAMERA_WITHIN_ERROR = 3
+    CAMERA_WITHIN_ERROR = 10
     SCOUT_LOAD_TIME = 1
     SCOUTING_TIME = 5
     REACH_TIME = 3.5
@@ -240,10 +240,11 @@ class Robot:
                 if (Robot.camera_error == error):
                     return
                 Robot.camera_error = error
-                if (abs(Robot.camera_error) < Robot.CAMERA_WITHIN_ERROR):
+                Robot.turret.rotate_to(Camera.pixels_to_degrees_width(Robot.camera_error))
+                if (abs(Robot.camera_error) < Robot.CAMERA_WITHIN_ERROR or Robot.turret.done_tracking):
                     Robot.set_auto_state(AutoState.REACHING)
-                Robot.rotate_to(Robot.camera_error)
             else:
+                print("not visible")
                 Robot.turret.set_target(0)
             return
         if (Robot.auto_state == AutoState.REACHING):
@@ -258,10 +259,6 @@ class Robot:
             if (Robot.auto_state_timer.time_passed_seconds() > Robot.GRAB_TIME):
                 Robot.set_auto_state(AutoState.RESTING)
             return
-
-    def rotate_to(error):
-        P = -0.3
-        Robot.turret.set_target(error * P)
 
     read_index = 0
     def update():

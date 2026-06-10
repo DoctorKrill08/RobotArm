@@ -1,18 +1,18 @@
 from ultralytics import YOLO
+import cv2
 
-model = YOLO("yolov8n.yaml")
+CUP_ID = 41
+MINIMUM_CONFIDENCE = 0.25
 
-train_results = model.train(
-    data="config.yaml",  # Path to dataset configuration file
-    epochs=1,  # Number of training epochs
-)
+# Load a pretrained YOLO26n model
+model = YOLO("runs/detect/train/weights/best.pt")
+results = model.predict("C:/Users/Admin/Robotics/RobotArm/CameraStuff/cup_detector/cup_dataset/test_images/cup0.jpg",conf = MINIMUM_CONFIDENCE)  # Predict on an image
 
-# Evaluate the model's performance on the validation set
-metrics = model.val()
+# Render the bounding boxes onto the image array
+annotated_frame = results[0].plot()
+annotated_frame = cv2.resize(annotated_frame, (400, 400))
 
-# Perform object detection on an image
-results = model("C:/Users/Admin/Robotics/RobotArm/CameraStuff/cup_dataset/test_images/image.jpg")  # Predict on an image
-results[0].show()  # Display results
-
-# Export the model to ONNX format for deployment
-path = model.export(format="onnx")  # Returns the path to the exported model
+# Display using OpenCV
+cv2.imshow("YOLO Detection Results", annotated_frame)
+cv2.waitKey(0)  # Press any key to close the window
+cv2.destroyAllWindows()
