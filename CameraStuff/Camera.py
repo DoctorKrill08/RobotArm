@@ -5,6 +5,8 @@ import array
 
 from enum import Enum
 
+CAMERA_UPDATE_RATE = 5 #Every 5 frames
+
 def distance(X1,Y1,X2,Y2):
     return math.sqrt(((Y2 - Y1) ** 2) + (X2 - X1) ** 2)
 class CameraResults():
@@ -17,13 +19,12 @@ class CameraResults():
         self.height = 0
 def center_box(a,b):
     return (b + a) / 2
+
 def yolo_cup_detector_read(image):
     from ultralytics import YOLO
     MINIMUM_CONFIDENCE = 0.1
 
-    # Load a pretrained YOLO26n model
-    model = YOLO("runs/detect/train/weights/best.pt")
-    results = model.predict(image,conf = MINIMUM_CONFIDENCE)  # Predict on an image
+    results = Camera.model.predict(image,conf = MINIMUM_CONFIDENCE)  # Predict on an image
 
     # Render the bounding boxes onto the image array
     annotated_frame = results[0].plot()
@@ -41,7 +42,7 @@ def yolo_cup_detector_read(image):
             cy = center_box(y2,y1)
             dis = distance(cx,cy,Camera.CENTER_X,Camera.CENTER_Y)
             if (dis < min_distance):
-                dis = min_distance
+                min_distance = dis
                 closest_box = box
 
         x1, y1, x2, y2 = closest_box.xyxy[0].tolist()
@@ -76,8 +77,18 @@ class Camera():
     FIELD_OF_VIEW = 78 #Degrees
 
     mode = CameraMode.YOLO_CUP_DETECTOR
+    model = None #Will be assigned to whatever model when start() is called
+
+    current_frame = 0 #Used to keep track of every 5th frame
 
     def update():
+
+        #Dont update unless 5th frame
+        Camera.current_frame += 1
+        if (not Camera.current_frame == CAMERA_UPDATE_RATE):
+            return
+        
+        Camera.current_frame = 0
         ret, image = Camera.cap.read()
 
         if not ret:
@@ -111,6 +122,7 @@ class Camera():
     def start():
         Camera.cap = cv2.VideoCapture(0)
         from ultralytics import YOLO
+        Camera.model = YOLO("runs/detect/train/weights/best.pt")
         if not Camera.cap.isOpened():
             print("Error: Could not open webcam.")
         else:
