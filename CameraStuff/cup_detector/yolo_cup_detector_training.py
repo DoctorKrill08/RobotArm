@@ -9,7 +9,7 @@ model = YOLO("yolo26n.pt")
 # Train the model on the COCO8 dataset for 100 epochs
 train_results = model.train(
     data= r"C:\Users\Admin\Robotics\RobotArm\CameraStuff\cup_detector\config.yaml",  # Path to dataset configuration file
-    epochs=2,  # Number of training epochs
+    epochs=15,  # Number of training epochs
     imgsz=400,  # Image size for training
     device="cpu",  # Device to run on (e.g., 'cpu', 0, [0,1,2,3])
 )

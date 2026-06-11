@@ -2,7 +2,7 @@ task: detect
 mode: train
 model: yolo26n.pt
 data: C:\Users\Admin\Robotics\RobotArm\CameraStuff\cup_detector\config.yaml
-epochs: 2
+epochs: 15
 time: null
 patience: 100
 batch: 16
@@ -13,7 +13,7 @@ cache: false
 device: cpu
 workers: 8
 project: null
-name: train-4
+name: train-2
 exist_ok: false
 pretrained: true
 optimizer: auto
@@ -107,4 +107,4 @@ auto_augment: randaugment
 erasing: 0.4
 cfg: null
 tracker: botsort.yaml
-save_dir: C:\Users\Admin\Robotics\RobotArm\runs\detect\train-4
+save_dir: C:\Users\Admin\Robotics\RobotArm\runs\detect\train-2
